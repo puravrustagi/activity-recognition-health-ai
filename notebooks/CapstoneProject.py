@@ -6,7 +6,7 @@
 
 import pandas as pd
 import numpy as np
-
+import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -28,7 +28,7 @@ import kagglehub
 path = kagglehub.dataset_download("uciml/human-activity-recognition-with-smartphones")
 
 print("Path to dataset files:", path)
-
+st.write("Imporpting the Dataset human-activity-recognition-with-smartphones")
 
 # In[4]:
 
