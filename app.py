@@ -5,14 +5,22 @@ import numpy as np
 import joblib
 from sklearn.metrics import accuracy_score, classification_report
 
-# Define class names for HAR dataset
-class_names = ['STANDING' 'SITTING' 'LAYING' 'WALKING' 'WALKING_DOWNSTAIRS'
- 'WALKING_UPSTAIRS']
+# Load transformers and selected columns
+@st.cache_resource
+def load_transformers():
+    scaler = joblib.load('models/scaler.pkl')
+    pca = joblib.load('models/pca_transformer.pkl')
+    selected_columns = joblib.load('models/selected_columns.pkl')
+    return scaler, pca, selected_columns
 
 # Load pre-trained models
 @st.cache_resource
 def load_model(model_name):
     return joblib.load(f"models/{model_name}.pkl")
+
+# Define class names for HAR dataset
+class_names = ['STANDING' 'SITTING' 'LAYING' 'WALKING' 'WALKING_DOWNSTAIRS'
+ 'WALKING_UPSTAIRS']
 
 # Model selection options
 model_dict = {
@@ -24,7 +32,7 @@ model_dict = {
 }
 
 # Streamlit UI
-st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation")
+st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation with PCA & Correlation Dropping")
 st.write("Select models and upload a test CSV to evaluate the accuracy and make predictions.")
 
 # Model selection using checkboxes
@@ -36,17 +44,27 @@ for model_name in model_dict.keys():
 # File uploader for test dataset
 uploaded_file = st.file_uploader("📤 Upload a test CSV file", type=["csv"])
 
-# Display instructions
+# Load transformers and selected columns
+scaler, pca, selected_columns = load_transformers()
+
+# Display instructions if no file uploaded
 if uploaded_file:
     test_data = pd.read_csv(uploaded_file)
     st.write("✅ Test data successfully loaded!")
 
-    # Check if target column exists
+    # Check if 'Activity' column exists in test data
     if 'Activity' not in test_data.columns:
         st.error("❗️ The CSV must contain an 'Activity' column.")
     else:
-        X_test = test_data.drop(columns=['Activity'])
+        # Drop correlated columns
+        X_test = test_data[selected_columns]
         y_test = test_data['Activity']
+
+        # Apply Standard Scaling
+        X_scaled = scaler.transform(X_test)
+
+        # Apply PCA on Test Data
+        X_pca = pca.transform(X_scaled)
 
         # Iterate over selected models
         for model_name in selected_models:
@@ -54,7 +72,7 @@ if uploaded_file:
             model = load_model(model_file)
 
             # Predict and evaluate
-            y_pred = model.predict(X_test)
+            y_pred = model.predict(X_pca)
             accuracy = accuracy_score(y_test, y_pred)
             report = classification_report(y_test, y_pred, target_names=class_names)
 
