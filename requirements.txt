@@ -4,7 +4,7 @@ numpy
 seaborn
 matplotlib
 kagglehub
-scikit-learn
+scikit-learn==1.5.2
 tensorflow
-scikeras
+scikeras==0.13.0
 xgboost
