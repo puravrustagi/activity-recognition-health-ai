@@ -10,6 +10,9 @@ import streamlit as st
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+import joblib
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
 
 
 # In[2]:
@@ -149,82 +152,14 @@ y_initial=df.iloc[:,-1]
 # In[18]:
 
 
-#Outliers removal based on z score
+X_train = df.iloc[:,:-1]
+y_train =df.iloc[:,-1]
 
-from scipy import stats
-# Calculate Z-scores for each feature
-z_scores = np.abs(stats.zscore(X_initial))
-
-# Set a threshold (e.g., 3 standard deviations)
-threshold = 3
-outliers_z = np.where(z_scores > threshold)
-
-# Count and print the number of outliers
-print(f"Number of outliers detected by Z-Score: {len(np.unique(outliers_z[0]))}")
-
-# Optional: Remove outliers
-X_no_outliers_z = X_initial[(z_scores < threshold).all(axis=1)]
-y_no_outliers_z = y_initial[(z_scores < threshold).all(axis=1)]
+X_test=df_test.iloc[:,:-1]
+y_test=df_test.iloc[:,-1]
 
 
 # In[19]:
-
-
-# Compute correlation matrix of the columns to remove the redundant columns present
-corr_matrix = X_initial.corr()
-#corr_matrix = X_no_outliers_z.corr()
-
-
-# its difficult to visualize correlated max having 563 columns
-
-# Compute the correlation matrix
-corr_matrix_abs = corr_matrix.abs()  # Get absolute correlation values
-
-# Create an upper triangular mask to avoid duplicate comparisons
-upper = corr_matrix_abs.where(np.triu(np.ones(corr_matrix_abs.shape), k=1).astype(bool))
-
-# Find columns with correlation > 0.97
-to_drop = [column for column in upper.columns if any(upper[column] > 0.97)]
-
-# Drop highly correlated columns
-df_cleaned = df.drop(columns=to_drop)
-
-print("Original DataFrame:\n", df.shape)
-print("\nCorrelation Matrix:\n", corr_matrix_abs.shape)
-print("\nColumns dropped:", to_drop)
-print("\nCleaned DataFrame:\n", df_cleaned.shape)
-
-
-# In[20]:
-
-
-#dropping column found to be highly corelated to avoid redudancy
-df_test_cleaned=df_test.drop(columns=['tBodyAcc-mad()-X', 'tBodyAcc-mad()-Y', 'tBodyAcc-mad()-Z', 'tBodyAcc-max()-X', 'tBodyAcc-sma()', 'tBodyAcc-iqr()-X', 'tBodyAcc-iqr()-Y', 'tBodyAcc-iqr()-Z', 'tGravityAcc-mad()-X', 'tGravityAcc-mad()-Y', 'tGravityAcc-mad()-Z', 'tGravityAcc-max()-X', 'tGravityAcc-max()-Y', 'tGravityAcc-max()-Z', 'tGravityAcc-min()-X', 'tGravityAcc-min()-Y', 'tGravityAcc-min()-Z', 'tGravityAcc-energy()-X', 'tGravityAcc-iqr()-X', 'tGravityAcc-iqr()-Y', 'tGravityAcc-iqr()-Z', 'tGravityAcc-arCoeff()-X,2', 'tGravityAcc-arCoeff()-X,3', 'tGravityAcc-arCoeff()-X,4', 'tGravityAcc-arCoeff()-Y,2', 'tGravityAcc-arCoeff()-Y,3', 'tGravityAcc-arCoeff()-Y,4', 'tGravityAcc-arCoeff()-Z,2', 'tGravityAcc-arCoeff()-Z,3', 'tGravityAcc-arCoeff()-Z,4', 'tBodyAccJerk-std()-X', 'tBodyAccJerk-mad()-X', 'tBodyAccJerk-mad()-Y', 'tBodyAccJerk-mad()-Z', 'tBodyAccJerk-sma()', 'tBodyAccJerk-iqr()-X', 'tBodyAccJerk-iqr()-Y', 'tBodyAccJerk-iqr()-Z', 'tBodyAccJerk-entropy()-Y', 'tBodyAccJerk-entropy()-Z', 'tBodyGyro-mad()-X', 'tBodyGyro-mad()-Y', 'tBodyGyro-mad()-Z', 'tBodyGyro-iqr()-X', 'tBodyGyro-iqr()-Y', 'tBodyGyro-iqr()-Z', 'tBodyGyroJerk-mad()-X', 'tBodyGyroJerk-mad()-Y', 'tBodyGyroJerk-mad()-Z', 'tBodyGyroJerk-max()-X', 'tBodyGyroJerk-max()-Z', 'tBodyGyroJerk-sma()', 'tBodyGyroJerk-iqr()-X', 'tBodyGyroJerk-iqr()-Y', 'tBodyGyroJerk-iqr()-Z', 'tBodyGyroJerk-entropy()-Z', 'tBodyGyroJerk-arCoeff()-Z,1', 'tBodyAccMag-mean()', 'tBodyAccMag-mad()', 'tBodyAccMag-max()', 'tBodyAccMag-sma()', 'tBodyAccMag-iqr()', 'tGravityAccMag-mean()', 'tGravityAccMag-std()', 'tGravityAccMag-mad()', 'tGravityAccMag-max()', 'tGravityAccMag-min()', 'tGravityAccMag-sma()', 'tGravityAccMag-energy()', 'tGravityAccMag-iqr()', 'tGravityAccMag-entropy()', 'tGravityAccMag-arCoeff()1', 'tGravityAccMag-arCoeff()2', 'tGravityAccMag-arCoeff()3', 'tGravityAccMag-arCoeff()4', 'tBodyAccJerkMag-mean()', 'tBodyAccJerkMag-std()', 'tBodyAccJerkMag-mad()', 'tBodyAccJerkMag-max()', 'tBodyAccJerkMag-sma()', 'tBodyAccJerkMag-energy()', 'tBodyAccJerkMag-iqr()', 'tBodyAccJerkMag-entropy()', 'tBodyGyroMag-mean()', 'tBodyGyroMag-mad()', 'tBodyGyroMag-max()', 'tBodyGyroMag-sma()', 'tBodyGyroMag-iqr()', 'tBodyGyroJerkMag-mean()', 'tBodyGyroJerkMag-std()', 'tBodyGyroJerkMag-mad()', 'tBodyGyroJerkMag-max()', 'tBodyGyroJerkMag-sma()', 'tBodyGyroJerkMag-iqr()', 'tBodyGyroJerkMag-entropy()', 'fBodyAcc-mean()-X', 'fBodyAcc-mean()-Y', 'fBodyAcc-mean()-Z', 'fBodyAcc-std()-X', 'fBodyAcc-std()-Y', 'fBodyAcc-std()-Z', 'fBodyAcc-mad()-X', 'fBodyAcc-mad()-Y', 'fBodyAcc-mad()-Z', 'fBodyAcc-max()-X', 'fBodyAcc-max()-Y', 'fBodyAcc-max()-Z', 'fBodyAcc-sma()', 'fBodyAcc-energy()-X', 'fBodyAcc-energy()-Z', 'fBodyAcc-iqr()-Z', 'fBodyAcc-entropy()-X', 'fBodyAcc-entropy()-Y', 'fBodyAcc-entropy()-Z', 'fBodyAcc-kurtosis()-X', 'fBodyAcc-kurtosis()-Y', 'fBodyAcc-kurtosis()-Z', 'fBodyAcc-bandsEnergy()-1,8', 'fBodyAcc-bandsEnergy()-1,16', 'fBodyAcc-bandsEnergy()-17,32', 'fBodyAcc-bandsEnergy()-33,48', 'fBodyAcc-bandsEnergy()-49,64', 'fBodyAcc-bandsEnergy()-1,24', 'fBodyAcc-bandsEnergy()-25,48', 'fBodyAcc-bandsEnergy()-1,16.1', 'fBodyAcc-bandsEnergy()-17,32.1', 'fBodyAcc-bandsEnergy()-33,48.1', 'fBodyAcc-bandsEnergy()-49,64.1', 'fBodyAcc-bandsEnergy()-1,24.1', 'fBodyAcc-bandsEnergy()-25,48.1', 'fBodyAcc-bandsEnergy()-1,16.2', 'fBodyAcc-bandsEnergy()-17,32.2', 'fBodyAcc-bandsEnergy()-33,48.2', 'fBodyAcc-bandsEnergy()-49,64.2', 'fBodyAcc-bandsEnergy()-1,24.2', 'fBodyAcc-bandsEnergy()-25,48.2', 'fBodyAccJerk-mean()-X', 'fBodyAccJerk-mean()-Y', 'fBodyAccJerk-mean()-Z', 'fBodyAccJerk-std()-X', 'fBodyAccJerk-std()-Y', 'fBodyAccJerk-std()-Z', 'fBodyAccJerk-mad()-X', 'fBodyAccJerk-mad()-Y', 'fBodyAccJerk-mad()-Z', 'fBodyAccJerk-max()-X', 'fBodyAccJerk-max()-Y', 'fBodyAccJerk-max()-Z', 'fBodyAccJerk-sma()', 'fBodyAccJerk-energy()-X', 'fBodyAccJerk-energy()-Y', 'fBodyAccJerk-energy()-Z', 'fBodyAccJerk-iqr()-X', 'fBodyAccJerk-iqr()-Y', 'fBodyAccJerk-iqr()-Z', 'fBodyAccJerk-entropy()-X', 'fBodyAccJerk-entropy()-Y', 'fBodyAccJerk-entropy()-Z', 'fBodyAccJerk-bandsEnergy()-1,8', 'fBodyAccJerk-bandsEnergy()-9,16', 'fBodyAccJerk-bandsEnergy()-17,24', 'fBodyAccJerk-bandsEnergy()-25,32', 'fBodyAccJerk-bandsEnergy()-17,32', 'fBodyAccJerk-bandsEnergy()-49,64', 'fBodyAccJerk-bandsEnergy()-1,24', 'fBodyAccJerk-bandsEnergy()-9,16.1', 'fBodyAccJerk-bandsEnergy()-17,24.1', 'fBodyAccJerk-bandsEnergy()-25,32.1', 'fBodyAccJerk-bandsEnergy()-1,16.1', 'fBodyAccJerk-bandsEnergy()-17,32.1', 'fBodyAccJerk-bandsEnergy()-49,64.1', 'fBodyAccJerk-bandsEnergy()-1,24.1', 'fBodyAccJerk-bandsEnergy()-25,48.1', 'fBodyAccJerk-bandsEnergy()-9,16.2', 'fBodyAccJerk-bandsEnergy()-17,24.2', 'fBodyAccJerk-bandsEnergy()-25,32.2', 'fBodyAccJerk-bandsEnergy()-33,40.2', 'fBodyAccJerk-bandsEnergy()-1,16.2', 'fBodyAccJerk-bandsEnergy()-17,32.2', 'fBodyAccJerk-bandsEnergy()-33,48.2', 'fBodyAccJerk-bandsEnergy()-49,64.2', 'fBodyAccJerk-bandsEnergy()-1,24.2', 'fBodyAccJerk-bandsEnergy()-25,48.2', 'fBodyGyro-mean()-X', 'fBodyGyro-mean()-Y', 'fBodyGyro-mean()-Z', 'fBodyGyro-std()-X', 'fBodyGyro-std()-Y', 'fBodyGyro-std()-Z', 'fBodyGyro-mad()-X', 'fBodyGyro-mad()-Y', 'fBodyGyro-mad()-Z', 'fBodyGyro-max()-X', 'fBodyGyro-max()-Z', 'fBodyGyro-sma()', 'fBodyGyro-energy()-Y', 'fBodyGyro-energy()-Z', 'fBodyGyro-entropy()-X', 'fBodyGyro-entropy()-Y', 'fBodyGyro-entropy()-Z', 'fBodyGyro-kurtosis()-X', 'fBodyGyro-kurtosis()-Y', 'fBodyGyro-kurtosis()-Z', 'fBodyGyro-bandsEnergy()-1,8', 'fBodyGyro-bandsEnergy()-1,16', 'fBodyGyro-bandsEnergy()-17,32', 'fBodyGyro-bandsEnergy()-33,48', 'fBodyGyro-bandsEnergy()-49,64', 'fBodyGyro-bandsEnergy()-1,24', 'fBodyGyro-bandsEnergy()-25,48', 'fBodyGyro-bandsEnergy()-17,32.1', 'fBodyGyro-bandsEnergy()-33,48.1', 'fBodyGyro-bandsEnergy()-49,64.1', 'fBodyGyro-bandsEnergy()-1,24.1', 'fBodyGyro-bandsEnergy()-25,48.1', 'fBodyGyro-bandsEnergy()-1,16.2', 'fBodyGyro-bandsEnergy()-17,32.2', 'fBodyGyro-bandsEnergy()-33,48.2', 'fBodyGyro-bandsEnergy()-49,64.2', 'fBodyGyro-bandsEnergy()-1,24.2', 'fBodyGyro-bandsEnergy()-25,48.2', 'fBodyAccMag-mean()', 'fBodyAccMag-std()', 'fBodyAccMag-mad()', 'fBodyAccMag-max()', 'fBodyAccMag-sma()', 'fBodyAccMag-iqr()', 'fBodyAccMag-entropy()', 'fBodyAccMag-kurtosis()', 'fBodyBodyAccJerkMag-mean()', 'fBodyBodyAccJerkMag-std()', 'fBodyBodyAccJerkMag-mad()', 'fBodyBodyAccJerkMag-max()', 'fBodyBodyAccJerkMag-sma()', 'fBodyBodyAccJerkMag-energy()', 'fBodyBodyAccJerkMag-iqr()', 'fBodyBodyAccJerkMag-entropy()', 'fBodyBodyAccJerkMag-kurtosis()', 'fBodyBodyGyroMag-mean()', 'fBodyBodyGyroMag-std()', 'fBodyBodyGyroMag-mad()', 'fBodyBodyGyroMag-max()', 'fBodyBodyGyroMag-sma()', 'fBodyBodyGyroMag-entropy()', 'fBodyBodyGyroMag-kurtosis()', 'fBodyBodyGyroJerkMag-mean()', 'fBodyBodyGyroJerkMag-std()', 'fBodyBodyGyroJerkMag-mad()', 'fBodyBodyGyroJerkMag-max()', 'fBodyBodyGyroJerkMag-sma()', 'fBodyBodyGyroJerkMag-energy()', 'fBodyBodyGyroJerkMag-iqr()', 'fBodyBodyGyroJerkMag-entropy()', 'angle(X,gravityMean)', 'angle(Y,gravityMean)', 'angle(Z,gravityMean)'])
-
-
-# In[21]:
-
-
-df_test_cleaned.shape
-
-
-# In[22]:
-
-
-df_test_cleaned.describe()
-
-
-# In[23]:
-
-
-X_train = df_cleaned.iloc[:,:-1]
-y_train =df_cleaned.iloc[:,-1]
-
-X_test=df_test_cleaned.iloc[:,:-1]
-y_test=df_test_cleaned.iloc[:,-1]
-
-
-# In[24]:
 
 
 from sklearn.preprocessing import StandardScaler
@@ -233,7 +168,7 @@ from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
 
 # Fit and transform on X_train
-#NOT USING SCALING on TRAIN DATA AS DATA IS ALREADY SCALED
+
 X_train_scaled = scaler.fit_transform(X_train)
 
 # Transform X_test using the same scaler
@@ -241,7 +176,14 @@ X_test_scaled = scaler.transform(X_test)
 
 
 
-# In[25]:
+# In[20]:
+
+
+# Save the scaler to ensure consistent data transformation
+joblib.dump(scaler, 'scaler.pkl')
+
+
+# In[21]:
 
 
 from sklearn.decomposition import PCA
@@ -256,80 +198,70 @@ print(f"Number of components to retain 95% variance: {pca.n_components_}")
 
 
 
-# In[26]:
+# In[22]:
 
 
 X_train_pca.shape
 
 
-# In[27]:
+# In[23]:
 
 
 X_test_pca.shape
 
 
-# In[28]:
-
-
-###outliers code
-
-
-# In[65]:
+# In[24]:
 
 
 # Save PCA and selected columns
 joblib.dump(pca, 'pca_transformer.pkl')
-joblib.dump(df_cleaned.columns, 'selected_columns.pkl')
 
 
-# In[29]:
-
-
-X_no_outliers_z.shape
-
-
-# In[30]:
-
-
-y_no_outliers_z.shape
-
-
-# In[31]:
+# In[25]:
 
 
 # assigning proper columns to train dataset 
-#X_train = X_no_outliers_z
-#y_train= y_no_outliers_z
 
 X_train = X_train_pca
-y_train= y_train
-
-#X_train = X_no_outliers_z
-#y_train= y_no_outliers_z
+y_train = y_train
 
 X_test=X_test_pca
 y_test=y_test
 
 
-# In[32]:
+# In[26]:
+
+
+from sklearn.preprocessing import LabelEncoder
+# Encode target labels (Convert categorical to numeric)
+encoder = LabelEncoder()
+y_train = encoder.fit_transform(y_train)
+y_test = encoder.transform(y_test)
+
+
+# Save the encoder for later use
+joblib.dump(encoder, 'label_encoder.pkl')
+
+
+# In[27]:
 
 
 X_train.shape
 
 
-# In[33]:
+# In[28]:
 
 
 y_train.shape
 
 
-# In[34]:
+# In[29]:
 
 
 X_test.shape
 
 
-# In[35]:
+# In[30]:
 
 
 from sklearn import svm
@@ -339,7 +271,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 
-# In[36]:
+# In[31]:
 
 
 from sklearn.linear_model import LogisticRegression
@@ -350,7 +282,7 @@ logisticregressionmodel.fit(X_train, y_train)
 print("Logistic Regression Model Trained Successfully!")
 
 
-# In[37]:
+# In[32]:
 
 
 # Make predictions
@@ -363,10 +295,8 @@ print("\n Logistic Regression Model Classification Report:")
 print(classification_report(y_test, y_pred))
 
 
-# In[38]:
+# In[33]:
 
-
-from sklearn.model_selection import GridSearchCV
 
 # Define parameter grid for tuning
 param_grid = {
@@ -376,39 +306,38 @@ param_grid = {
 }
 
 # Create the GridSearchCV object
-grid_search = GridSearchCV(LogisticRegression(), param_grid, cv=5, scoring='accuracy', verbose=1)
+#grid_search = GridSearchCV(LogisticRegression(), param_grid, cv=5, scoring='accuracy', verbose=1)
+
+random_search = RandomizedSearchCV(LogisticRegression(), param_distributions=param_grid,
+                                   n_iter=20, cv=5, n_jobs=-1, verbose=2)
 
 
 # Fit grid search
-grid_search.fit(X_train_scaled, y_train)
+#grid_search.fit(X_train_scaled, y_train)
+
+random_search.fit(X_train, y_train)
 
 # Print the best parameters and best score
-print(f"Best Parameters: {grid_search.best_params_}")
-print(f"Best Cross-Validation Score: {grid_search.best_score_:.2f}")
+print(f"Best Parameters: {random_search.best_params_}")
+print(f"Best Cross-Validation Score: {random_search.best_score_:.2f}")
 
 # Use the best estimator to make predictions
-best_model_lg = grid_search.best_estimator_
-y_pred_best = best_model_lg.predict(X_test_scaled)
+best_model_lg = random_search.best_estimator_
+y_pred_best = best_model_lg.predict(X_test)
 
 # Evaluate the tuned model
 print(classification_report(y_test, y_pred_best))
 print(f"Tuned Model Accuracy: {accuracy_score(y_test, y_pred_best):.2f}")
 
 
-# In[43]:
+# In[34]:
 
 
-import joblib
 # Save the trained model to a file
 joblib.dump(best_model_lg, 'logistic_model.pkl')
 
-# Save the scaler to ensure consistent data transformation
-joblib.dump(scaler, 'scaler.pkl')
 
-
-
-
-# In[44]:
+# In[35]:
 
 
 svc_linear = svm.SVC(kernel='linear')
@@ -424,7 +353,7 @@ cm = confusion_matrix(y_test, y_pred)
 print('\n\nConfusion matrix\n\n', cm)
 
 
-# In[45]:
+# In[36]:
 
 
 svc_poly = svm.SVC(kernel='poly')
@@ -440,10 +369,10 @@ cm = confusion_matrix(y_test, y_pred)
 print('\n\nConfusion matrix\n\n', cm)
 
 
-# In[46]:
+# In[37]:
 
 
-svc_rbf = svm.SVC(kernel='rbf')
+svc_rbf = svm.SVC(kernel='rbf',probability=True,random_state=42)
 svc_rbf.fit(X_train, y_train)
 # make predictions on test set
 y_pred=svc_rbf.predict(X_test)
@@ -457,52 +386,44 @@ cm = confusion_matrix(y_test, y_pred)
 print('\n\nConfusion matrix\n\n', cm)
 
 
-# In[59]:
+# In[38]:
 
 
 # Save the model to a .pkl file
 joblib.dump(svc_rbf, 'svc_rbf_model.pkl')
 
 
-# In[47]:
+# In[39]:
+
+
+svc_rbf.get_params()
+
+
+# In[40]:
 
 
 # Define hyperparameters to tune
 param_grid = {
-    'C': [0.1, 1, 10, 100],
-    'kernel': ['linear', 'rbf', 'poly'],
-    'gamma': ['scale', 'auto', 0.1, 1, 10],
-    'degree': [2, 3, 4]  # Only relevant for 'poly' kernel
+    'C': [0.01, 0.1, 1, 10, 100],
+    'gamma': [0.001, 0.01, 0.1, 1,'scale'],
+    'kernel': ['rbf']
 }
-
-# Create SVC model
 svc = svm.SVC()
-
-# Apply GridSearchCV
-grid_search = GridSearchCV(svc, param_grid, cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
-grid_search.fit(X_train, y_train)
+random_search = RandomizedSearchCV(svc, param_distributions=param_grid,
+                                   n_iter=20, cv=5, n_jobs=-1, verbose=2)
+random_search.fit(X_train, y_train)
 
 # Best parameters and best score
-print(f"Best Parameters: {grid_search.best_params_}")
-print(f"Best Accuracy: {grid_search.best_score_:.4f}")
+print(f"Best Parameters: {random_search.best_params_}")
+print(f"Best Accuracy: {random_search.best_score_:.4f}")
 
 # Evaluate on test data
-best_model_svc = grid_search.best_estimator_
+best_model_svc = random_search.best_estimator_
 y_pred = best_model_svc.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 
-# In[48]:
-
-
-from sklearn.preprocessing import LabelEncoder
-# Encode target labels (Convert categorical to numeric)
-encoder = LabelEncoder()
-y_train = encoder.fit_transform(y_train)
-y_test = encoder.fit_transform(y_test)
-
-
-# In[49]:
+# In[41]:
 
 
 import xgboost as xgb
@@ -527,7 +448,7 @@ xgbmodel = xgb.train(params, dtrain, num_boost_round=num_rounds)
 print("XGBoost Model Trained Successfully!")
 
 
-# In[50]:
+# In[42]:
 
 
 # Make predictions
@@ -539,17 +460,9 @@ print(f"XGBoost Model Accuracy: {accuracy:.4f}")
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 
-# In[60]:
+# In[43]:
 
 
-# Save the model to a .pkl file
-joblib.dump(xgbmodel, 'xgbmodel.pkl')
-
-
-# In[51]:
-
-
-"""
 # Define parameter grid
 param_grid = {
     'n_estimators': [100, 200, 300],
@@ -566,17 +479,19 @@ param_grid = {
 xgb_model = xgb.XGBClassifier(eval_metric='logloss')
 
 # Grid Search with 5-fold cross-validation
-grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, 
-                           cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
+#grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid,  cv=5, scoring='accuracy', n_jobs=-1, verbose=1)
+
+rand_search = RandomizedSearchCV(xgb_model, param_distributions=param_grid, n_iter=20, cv=5, n_jobs=-1, verbose=2)
+
 
 # Fit GridSearchCV
-grid_search.fit(X_train, y_train)
+rand_search.fit(X_train, y_train)
 
 # Best parameters
-print(f"Best Parameters: {grid_search.best_params_}")
+print(f"Best Parameters: {rand_search.best_params_}")
 
 # Use best model from GridSearchCV
-best_model_xgboost = grid_search.best_estimator_
+best_model_xgboost = rand_search.best_estimator_
 
 # Make predictions
 y_pred_best = best_model_xgboost.predict(X_test)
@@ -585,10 +500,15 @@ y_pred_best = best_model_xgboost.predict(X_test)
 accuracy_best = accuracy_score(y_test, y_pred_best)
 print(f"Tuned Model Accuracy: {accuracy_best:.4f}")
 
-"""
+
+# In[44]:
 
 
-# In[52]:
+# Save the model to a .pkl file
+joblib.dump(best_model_xgboost, 'xgbmodel.pkl')
+
+
+# In[45]:
 
 
 from sklearn.ensemble import RandomForestClassifier
@@ -599,7 +519,7 @@ randomforestmodel.fit(X_train, y_train)
 print("Random Forest Model Trained Successfully!")
 
 
-# In[53]:
+# In[46]:
 
 
 # Make predictions
@@ -612,14 +532,63 @@ print("\n Random Forest Model Classification Report:")
 print(classification_report(y_test, y_pred))
 
 
-# In[61]:
+# In[47]:
+
+
+randomforestmodel.get_params()
+
+
+# In[48]:
+
+
+# Define the Random Forest classifier
+rf = RandomForestClassifier(random_state=42)
+
+# Define the hyperparameter grid for tuning
+param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [10, 20, 30, None],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'bootstrap': [True, False]
+}
+
+# Perform Grid Search with cross-validation
+#grid_search = GridSearchCV(estimator=rf, param_grid=param_grid,cv=5, n_jobs=-1, verbose=2, scoring='accuracy')
+
+
+rand_search = RandomizedSearchCV(rf, param_distributions=param_grid, n_iter=20, cv=5, n_jobs=-1, verbose=2)
+
+# Fit the model to training data
+#grid_search.fit(X_train, y_train)
+rand_search.fit(X_train, y_train)
+
+# Get the best model
+#best_rf = grid_search.best_estimator_
+#print(f"Best parameters: {grid_search.best_params_}")
+
+
+# Get the best model
+best_rf = rand_search.best_estimator_
+print(f"Best parameters: {rand_search.best_params_}")
+
+# Make predictions
+y_pred = best_rf.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.4f}")
+print(classification_report(y_test, y_pred))
+
+
+# In[49]:
 
 
 # Save the model to a .pkl file
 joblib.dump(randomforestmodel, 'randomforestmodel.pkl')
 
 
-# In[54]:
+# In[50]:
 
 
 import tensorflow as tf
@@ -628,66 +597,169 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
+from scikeras.wrappers import KerasClassifier
+from sklearn.model_selection import GridSearchCV
+from tensorflow.keras.optimizers import Adam
+
+
+# In[51]:
+
+
+# Define model
+def create_model(neurons=64, activation='relu', dropout_rate=0.2, learning_rate=0.001):
+    model = Sequential()
+    model.add(Dense(neurons, input_shape=(X_train.shape[1],), activation=activation))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(neurons, activation=activation))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(len(np.unique(y_train)), activation='softmax'))  # Multi-class classification
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
+
+annmodel = KerasClassifier(model=create_model,neurons=64, activation='relu', dropout_rate=0.2, learning_rate=0.001, verbose=0)
+
+
+
+
+
+# In[52]:
+
+
+# Train the model
+annmodel.fit(X_train, y_train, epochs=50, batch_size=8, validation_data=(X_test, y_test), verbose=1)
+annmodel.model_.summary()
+
+
+# In[53]:
+
+
+# Evaluate on test data
+test_loss, test_acc = annmodel.model_.evaluate(X_test, y_test)
+print(f"Test Accuracy: {test_acc:.4f}")
+
+
+# In[54]:
+
+
+annmodel.get_params().keys()
 
 
 # In[55]:
 
 
-#Now lets apply the deep learning Model 
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import uniform
 
-# Define model architecture
-model = Sequential([
-    Dense(32, activation='relu', input_shape=(X_train.shape[1],)),
-    Dropout(0.2),
-    Dense(16, activation='relu'),
-    Dropout(0.2),
-    Dense(len(np.unique(y_train)), activation='softmax')  # Softmax for multi-class classification
-])
+# Randomized search
+param_dist = {
+    'neurons': [32, 64, 128],
+    'activation': ['relu', 'tanh'],
+    'dropout_rate': [0.2, 0.3, 0.5],
+    'batch_size': [32, 64],
+    'epochs': [50, 100],
+    'learning_rate': uniform(0.0001, 0.01)
+}
 
-# Compile model
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+random_search = RandomizedSearchCV(estimator=annmodel, param_distributions=param_dist,n_iter=20, cv=3, n_jobs=-1, verbose=2)
+ 
+random_search.fit(X_train, y_train)
 
-# Summary of the model
-model.summary()
+
+# Get the best model
+best_annmodel = random_search.best_estimator_
+print(f"Best parameters: {random_search.best_params_}")
+
+# Make predictions
+y_pred = best_annmodel.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.4f}")
+print(classification_report(y_test, y_pred))
+
 
 
 # In[56]:
 
 
-# Train the model
-history = model.fit(X_train, y_train, epochs=50, batch_size=8, validation_data=(X_test, y_test), verbose=1)
+#!pip install scikeras
 
 
 # In[57]:
 
 
-# Evaluate on test data
-test_loss, test_acc = model.evaluate(X_test, y_test)
-print(f"Test Accuracy: {test_acc:.4f}")
+# Save the model to a .pkl file
+joblib.dump(best_annmodel, 'ann_model.pkl')
 
 
 # In[58]:
 
 
-# Predict class labels
-predictions = model.predict(X_test)
-predicted_classes = np.argmax(predictions, axis=1)
+#Ensemble of models
+from sklearn.ensemble import  VotingClassifier
 
-print("Predicted Classes:", encoder.inverse_transform(predicted_classes[:10]))
-print("Actual Classes:", encoder.inverse_transform(y_test[:10]))
+# Create an ensemble using VotingClassifier
+ensemble_model = VotingClassifier(
+    estimators=[
+        ('rf', randomforestmodel),
+        ('svc', svc_rbf),
+        ('xgb', best_model_xgboost),
+        ('lg',best_model_lg),
+        ('ann',best_annmodel)
+    ],
+    voting='soft'  # Use 'soft' for probability-based voting or 'hard' for majority voting
+)
+
+# Fit the ensemble model
+ensemble_model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = ensemble_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Ensemble Model Accuracy: {accuracy * 100:.2f}%")
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 
-# In[ ]:
+# In[59]:
 
 
-#!pip install scikeras
+joblib.dump(ensemble_model, 'ensemble_model.pkl')
+
+
+# In[61]:
+
+
+best_annmodel.model_.summary()
 
 
 # In[62]:
 
 
-# Save the model to a .pkl file
-joblib.dump(model, 'ann_model.pkl')
+best_annmodel.model_.get_config()
+
+
+# In[63]:
+
+
+# Get model weights
+weights = best_annmodel.model_.get_weights()
+
+# Print summary of weights and biases
+for layer_index, layer in enumerate(best_annmodel.model_.layers):
+    print(f"Layer {layer_index + 1}: {layer.name}")
+    layer_weights = layer.get_weights()
+    
+    if len(layer_weights) > 0:
+        weights, biases = layer_weights
+        print(f"  - Weights Shape: {weights.shape}")
+        print(f"  - Biases Shape: {biases.shape}")
+    else:
+        print("  - No trainable weights in this layer.")
 
 
 # In[ ]:
