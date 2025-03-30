@@ -58,7 +58,7 @@ st.write("Select models and upload a test CSV to evaluate the accuracy.")
 # Model selection using checkboxes
 selected_models = []
 for model_name in model_dict.keys():
-    if st.checkbox(f"Use {model_name}", key=model_name):
+    if  st.radio(f"Use {model_name}", key=model_name):
         selected_models.append(model_name)
 
 # File uploader for test dataset
