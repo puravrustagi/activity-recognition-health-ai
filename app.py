@@ -85,7 +85,7 @@ if uploaded_file:
             st.subheader(f"📊 Results for {model_name}")
             st.write(f"🎯 **Accuracy:** {accuracy * 100:.2f}%")
             st.text("📄 Classification Report")
-            st.text(report)
+            st.code(report, language='text')
 
             #Show prediction comparison
             st.write("🔎 **Predictions vs. Actual:**")
