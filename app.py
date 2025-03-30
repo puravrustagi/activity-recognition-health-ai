@@ -60,6 +60,7 @@ if uploaded_file:
         # Drop correlated columns
         X_test = test_data.drop(columns=['Activity'])
         y_test = test_data['Activity']
+        y_test = encoder.transform(y_test)
 
         #st.write("COLUMNS IN TEST DATA:",X_test.shape)
 
