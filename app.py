@@ -79,7 +79,7 @@ if uploaded_file:
             # Predict and evaluate
             y_pred = model.predict(X_pca)
             accuracy = accuracy_score(y_test, y_pred)
-            report = classification_report(encoder.inverse_transform(y_test), encoder.inverse_transform(y_pred), target_names=class_names)
+            #report = classification_report(encoder.inverse_transform(y_test), encoder.inverse_transform(y_pred), target_names=class_names)
 
             # Display results
             st.subheader(f"📊 Results for {model_name}")
