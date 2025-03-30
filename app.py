@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, classification_report
 def load_transformers():
     scaler = joblib.load('models/scaler.pkl')
     pca = joblib.load('models/pca_transformer.pkl')
-    encoder = joblib.load('label_encoder.pkl')
+    encoder = joblib.load('models/label_encoder.pkl')
     return scaler, pca, encoder
 
 # Load pre-trained models
