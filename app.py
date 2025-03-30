@@ -5,13 +5,12 @@ import numpy as np
 import joblib
 from sklearn.metrics import accuracy_score, classification_report
 from tensorflow.keras.optimizers import Adam
-
-import joblib
-from scikeras.wrappers import KerasClassifier
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
+from scikeras.wrappers import KerasClassifier
 
 
+# Create a Keras model
 def create_model(neurons=64, activation='relu', dropout_rate=0.2, learning_rate=0.001):
     model = Sequential()
     model.add(Dense(neurons, input_shape=(102,), activation=activation))
@@ -32,14 +31,15 @@ def load_transformers():
     encoder = joblib.load('models/label_encoder.pkl')
     return scaler, pca, encoder
 
+
 # Load pre-trained models
 @st.cache_resource
 def load_model(model_name):
     return joblib.load(f"models/{model_name}.pkl")
 
+
 # Define class names for HAR dataset
-class_names = ['STANDING' 'SITTING' 'LAYING' 'WALKING' 'WALKING_DOWNSTAIRS'
- 'WALKING_UPSTAIRS']
+class_names = ['STANDING', 'SITTING', 'LAYING', 'WALKING', 'WALKING_DOWNSTAIRS', 'WALKING_UPSTAIRS']
 
 # Model selection options
 model_dict = {
@@ -53,18 +53,13 @@ model_dict = {
 
 # Streamlit UI
 st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation")
-st.write("Select models and upload a test CSV to evaluate the accuracy.")
+st.write("Select a model and upload a test CSV to evaluate the accuracy.")
 
-# Model selection using checkboxes
-# Create a radio button to select a model
-selected_models = st.radio(
-    "Select a model to use:",
+# Model selection using a radio button (single model selection)
+selected_model = st.radio(
+    "🔎 **Select a model to use:**",
     list(model_dict.keys())
 )
-
-# Display the selected model
-st.write(f"✅ You selected: **{selected_models}**")
-
 
 # File uploader for test dataset
 uploaded_file = st.file_uploader("📤 Upload a test CSV file", type=["csv"])
@@ -86,35 +81,23 @@ if uploaded_file:
         y_test = test_data['Activity']
         y_test = encoder.transform(y_test)
 
-        #st.write("COLUMNS IN TEST DATA:",X_test.shape)
-
         # Apply Standard Scaling
         X_scaled = scaler.transform(X_test)
-        #st.write("COLUMNS AFTER SCALING:",X_scaled.shape)
 
         # Apply PCA on Test Data
         X_pca = pca.transform(X_scaled)
-       # st.write("COLUMNS AFTER PCA:",X_pca.shape)
-        # Iterate over selected models
-        for model_name in selected_models:
-            model_file = model_dict[model_name]
-            model = load_model(model_file)
 
-            # Predict and evaluate
-            y_pred = model.predict(X_pca)
-            accuracy = accuracy_score(y_test, y_pred)
-            #report = classification_report(encoder.inverse_transform(y_test), encoder.inverse_transform(y_pred), target_names=class_names)
+        # Load selected model
+        model_file = model_dict[selected_model]
+        model = load_model(model_file)
 
-            # Display results
-            st.subheader(f"📊 Results for {model_name}")
-            st.write(f"🎯 **Accuracy:** {accuracy * 100:.2f}%")
-            #st.text("📄 Classification Report")
-            #st.code(report, language='text')
+        # Predict and evaluate
+        y_pred = model.predict(X_pca)
+        accuracy = accuracy_score(y_test, y_pred)
 
-            #Show prediction comparison
-            #st.write("🔎 **Predictions vs. Actual:**")
-            #results_df = pd.DataFrame({"Actual": encoder.inverse_transform(y_test), "Predicted": encoder.inverse_transform(y_pred)})
-            #st.write(results_df.head(10))
+        # Display results
+        st.subheader(f"📊 Results for {selected_model}")
+        st.write(f"🎯 **Accuracy:** {accuracy * 100:.2f}%")
 
 else:
     st.warning("⚠️ Please upload a test CSV file to continue.")
