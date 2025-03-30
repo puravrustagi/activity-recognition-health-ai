@@ -10,8 +10,7 @@ from sklearn.metrics import accuracy_score, classification_report
 def load_transformers():
     scaler = joblib.load('models/scaler.pkl')
     pca = joblib.load('models/pca_transformer.pkl')
-    selected_columns = joblib.load('models/selected_columns.pkl')
-    return scaler, pca, selected_columns
+    return scaler, pca
 
 # Load pre-trained models
 @st.cache_resource
@@ -28,11 +27,12 @@ model_dict = {
     "SVC": "svc_rbf_model",
     "XGBoost": "xgbmodel",
     "Artificial Neural Network (ANN)": "ann_model",
-    "Random Forest": "randomforestmodel"
+    "Random Forest": "randomforestmodel",
+    "Ensemble Model": "ensemble_model"
 }
 
 # Streamlit UI
-st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation with PCA & Correlation Dropping")
+st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation with PCA")
 st.write("Select models and upload a test CSV to evaluate the accuracy and make predictions.")
 
 # Model selection using checkboxes
@@ -45,7 +45,7 @@ for model_name in model_dict.keys():
 uploaded_file = st.file_uploader("📤 Upload a test CSV file", type=["csv"])
 
 # Load transformers and selected columns
-scaler, pca, selected_columns = load_transformers()
+scaler, pca = load_transformers()
 
 # Display instructions if no file uploaded
 if uploaded_file:
@@ -57,7 +57,7 @@ if uploaded_file:
         st.error("❗️ The CSV must contain an 'Activity' column.")
     else:
         # Drop correlated columns
-        X_test = test_data[selected_columns]
+        X_test = test_data.drop(columns=['Activity'])
         y_test = test_data['Activity']
 
         # Apply Standard Scaling
