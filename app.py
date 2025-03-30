@@ -79,7 +79,7 @@ if uploaded_file:
             # Predict and evaluate
             y_pred = model.predict(X_pca)
             accuracy = accuracy_score(y_test, y_pred)
-            report = classification_report(y_test, y_pred, target_names=class_names)
+            report = classification_report(encoder.inverse_transform(y_test), encoder.inverse_transform(y_pred), target_names=class_names)
 
             # Display results
             st.subheader(f"📊 Results for {model_name}")
@@ -89,7 +89,7 @@ if uploaded_file:
 
             #Show prediction comparison
             st.write("🔎 **Predictions vs. Actual:**")
-            results_df = pd.DataFrame({"Actual": y_test, "Predicted": encoder.inverse_transform(y_pred)})
+            results_df = pd.DataFrame({"Actual": encoder.inverse_transform(y_test), "Predicted": encoder.inverse_transform(y_pred)})
             st.write(results_df.head(5))
 
 else:
