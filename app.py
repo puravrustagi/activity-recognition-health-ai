@@ -63,11 +63,11 @@ if uploaded_file:
         st.write("COLUMNS IN TEST DATA:",X_test.shape)
 
         # Apply Standard Scaling
-        X_scaled = scaler.fit_transform(X_test)
+        X_scaled = scaler.transform(X_test)
         st.write("COLUMNS AFTER SCALING:",X_scaled.shape)
 
         # Apply PCA on Test Data
-        X_pca = pca.fit_transform(X_scaled)
+        X_pca = pca.transform(X_scaled)
         st.write("COLUMNS AFTER PCA:",X_pca.shape)
         # Iterate over selected models
         for model_name in selected_models:
