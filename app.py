@@ -61,10 +61,10 @@ if uploaded_file:
         y_test = test_data['Activity']
 
         # Apply Standard Scaling
-        X_scaled = scaler.transform(X_test)
+        X_scaled = scaler.fit_transform(X_test)
 
         # Apply PCA on Test Data
-        X_pca = pca.transform(X_scaled)
+        X_pca = pca.fit_transform(X_scaled)
 
         # Iterate over selected models
         for model_name in selected_models:
