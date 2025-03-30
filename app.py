@@ -5,6 +5,24 @@ import numpy as np
 import joblib
 from sklearn.metrics import accuracy_score, classification_report
 
+import joblib
+from scikeras.wrappers import KerasClassifier
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+
+def create_model(neurons=64, activation='relu', dropout_rate=0.2, learning_rate=0.001):
+    model = Sequential()
+    model.add(Dense(neurons, input_shape=(102,), activation=activation))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(32, activation=activation))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(6, activation='softmax'))  # Multi-class classification
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    return model
+
+
 # Load transformers and selected columns
 @st.cache_resource
 def load_transformers():
