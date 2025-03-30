@@ -10,7 +10,8 @@ from sklearn.metrics import accuracy_score, classification_report
 def load_transformers():
     scaler = joblib.load('models/scaler.pkl')
     pca = joblib.load('models/pca_transformer.pkl')
-    return scaler, pca
+    encoder = joblib.load('label_encoder.pkl')
+    return scaler, pca, encoder
 
 # Load pre-trained models
 @st.cache_resource
@@ -45,7 +46,7 @@ for model_name in model_dict.keys():
 uploaded_file = st.file_uploader("📤 Upload a test CSV file", type=["csv"])
 
 # Load transformers and selected columns
-scaler, pca = load_transformers()
+scaler, pca, encoder = load_transformers()
 
 # Display instructions if no file uploaded
 if uploaded_file:
@@ -87,7 +88,7 @@ if uploaded_file:
 
             # Show prediction comparison
             st.write("🔎 **Predictions vs. Actual:**")
-            results_df = pd.DataFrame({"Actual": y_test, "Predicted": y_pred})
+            results_df = pd.DataFrame({"Actual": y_test, "Predicted": encoder.inverse_transform(y_pred)})
             st.write(results_df.head(10))
 
 else:
