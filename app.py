@@ -56,10 +56,15 @@ st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation")
 st.write("Select models and upload a test CSV to evaluate the accuracy.")
 
 # Model selection using checkboxes
-selected_models = []
-for model_name in model_dict.keys():
-    if  st.radio(f"Use {model_name}", key=model_name):
-        selected_models.append(model_name)
+# Create a radio button to select a model
+selected_models = st.radio(
+    "Select a model to use:",
+    list(model_dict.keys())
+)
+
+# Display the selected model
+st.write(f"✅ You selected: **{selected_models}**")
+
 
 # File uploader for test dataset
 uploaded_file = st.file_uploader("📤 Upload a test CSV file", type=["csv"])
