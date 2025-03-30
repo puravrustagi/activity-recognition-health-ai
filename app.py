@@ -33,8 +33,8 @@ model_dict = {
 }
 
 # Streamlit UI
-st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation with PCA")
-st.write("Select models and upload a test CSV to evaluate the accuracy and make predictions.")
+st.title("🏃‍♂️ Human Activity Recognition (HAR) Model Evaluation")
+st.write("Select models and upload a test CSV to evaluate the accuracy.")
 
 # Model selection using checkboxes
 selected_models = []
