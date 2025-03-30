@@ -48,7 +48,7 @@ model_dict = {
     "XGBoost": "xgbmodel",
     "Artificial Neural Network (ANN)": "ann_model",
     "Random Forest": "randomforestmodel",
-    "Ensemble Model": "ensemble_model"
+    "Ensemble Model (All of the above)": "ensemble_model"
 }
 
 # Streamlit UI
