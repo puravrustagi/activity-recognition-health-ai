@@ -102,7 +102,7 @@ if uploaded_file:
          # Show prediction comparison
         st.write("🔎 **Predictions vs. Actual:**")
         results_df = pd.DataFrame({"Actual": encoder.inverse_transform(y_test), "Predicted": encoder.inverse_transform(y_pred)})
-        st.write(results_df.head(10))
+        st.write(results_df.sample(10))
 
 else:
     st.warning("⚠️ Please upload a test CSV file to continue.")
